@@ -1,153 +1,106 @@
 # AI Travel Guide
 
-A premium, portfolio-grade travel companion that turns a natural-language request into a route-aware itinerary. It is not a chatbot wrapper. Intelligence lives in the pipeline: structured intent, live place data, deterministic scoring, travel-time planning, and a cinematic UI.
+A FastAPI + React travel planner that turns a natural-language request into a **day-by-day, route-aware itinerary** with photos, a map, and a **PKR field budget**. It is not a chatbot wrapper: the model extracts structured intent; place discovery, scoring, and scheduling are deterministic.
+
+Built as a portfolio product for travelers who want a usable route — especially in northern Pakistan — rather than a copy-pasted list of the same landmarks every day.
 
 ## Overview
 
-**AI Travel Guide** helps someone describe a trip in plain language — destination, dates, budget, interests, travel style — and receive a practical day-by-day plan with distances, visit durations, explanations, a map, and an estimated budget range.
-
-## Problem Statement
-
-Planning a trip usually means bouncing between maps, blogs, review sites, and spreadsheets. Distances, opening hours, taste, and time never live in one place. Generic AI itineraries ignore geography and invent unrealistic days.
-
-## Solution
-
-The product combines:
-
-- **Llama 3.3 70B** (via OpenRouter, Groq preferred) for intent extraction, copy, and itinerary edits
-- **Google Places** when a Maps API key is present, otherwise **OpenStreetMap / Nominatim / Overpass**
-- **OSRM** driving times with haversine fallback
-- A **deterministic recommendation engine** (interest match, rating, distance, budget, itinerary fit)
-- A **route-aware scheduler** that clusters nearby places and respects travel style
+Describe a trip (destination, length, budget, company, interests). The app geocodes the destination, discovers places (OpenStreetMap by default, Google Places if a server key is set), scores them, clusters **distinct day corridors**, and returns an itinerary you can edit with a trip assistant. Trips are saved in the browser (`localStorage`).
 
 ## Features
 
-- Cinematic landing page and mood-based discovery
-- Natural language + guided trip planner
-- Structured AI intent extraction (validated JSON, never raw model output)
-- Place discovery, scoring, and explainable recommendations
-- Day-by-day itinerary with travel time between stops
-- Interactive dark map with day switching
-- Contextual trip assistant (replace a stop, less driving, more food, regenerate a day)
-- Estimated budget ranges (clearly labeled as estimates)
-- Save trips in `localStorage`, structured for future auth and cloud sync
-- Polished loading, empty, and error states
-- Responsive itinerary-first mobile layout
+- Natural-language planner plus a guided form (budget, pace, travelers, interests)
+- Structured intent extraction (JSON validated with Pydantic; not raw model output)
+- Place discovery with curated fallbacks for destinations such as Hunza, Islamabad, Lahore, and Skardu
+- Unique day corridors so a 7-day Hunza plan does not repeat the same fort
+- Leaflet map (CARTO Voyager tiles) with day switching
+- Estimated **PKR** budget ranges (guesthouse / meals / jeep-style field rates — estimates, not invoices)
+- In-app assistant that applies structured edits (`replace`, `less driving`, and similar actions)
+- Light editorial UI (cream paper, photography, motion) with a cinematic landing hero
 
-## AI Architecture
+## How it works
 
 ```text
-USER INPUT
+User request
       ↓
-AI INTENT ANALYSIS (Llama 3.3 70B, JSON validated by Pydantic)
+Intent JSON (Llama 3.3 70B via OpenRouter, Groq preferred)
       ↓
-STRUCTURED PREFERENCES
+Geocoding + place discovery (OSM / Overpass, or Google Places)
       ↓
-PLACE DISCOVERY (Google Places or OSM / Overpass + curated fallback)
+Deterministic scoring (interest, rating, distance, budget, fit)
       ↓
-DETERMINISTIC SCORING
+Day corridors → nearest-neighbor order → 2-opt cleanup → meals
       ↓
-ROUTE / DISTANCE ANALYSIS (OSRM or Google Distance Matrix)
+PKR budget estimate + narrative copy
       ↓
-ITINERARY CONSTRUCTION (cluster → nearest neighbor → 2-opt → meals)
-      ↓
-AI NARRATIVE + EXPLANATIONS
-      ↓
-FRONTEND TRIP EXPERIENCE
+React trip dashboard (map, timeline, assistant)
 ```
 
-The assistant does **not** rewrite the whole trip as free text. It returns structured actions (`remove`, `replace`, `less_driving`, `adjust_style`, …) that the itinerary engine applies.
+The assistant does not rewrite the whole trip as free text. It returns structured actions that the itinerary engine applies.
 
-## Recommendation Engine
-
-```text
-Travel Recommendation Score =
-  Interest Match
-+ Rating Score
-+ Distance Efficiency
-+ Budget Compatibility
-+ Itinerary Fit
-+ Popularity / quality signals
-```
-
-A photography + mountains traveler ranks scenic viewpoints above generic shopping malls even if the model never “picks” places by itself.
-
-## Itinerary Generation Logic
-
-1. Filter attractions vs meals vs hotels
-2. Cluster high-scoring places geographically across N days
-3. Order each day with nearest-neighbor + 2-opt from the previous location
-4. Insert lunch and dinner near the current point
-5. Respect travel style: relaxed days have fewer stops and later starts
-6. Attach a short “why this stop” explanation using score reasons and travel time
-
-## Technology Stack
+## Technology stack
 
 | Layer | Stack |
 | --- | --- |
-| Frontend | React 19, Vite, TypeScript, React Router, Leaflet, Framer Motion-ready CSS |
-| Backend | FastAPI, Pydantic v2, httpx, SlowAPI |
-| AI | OpenRouter → `meta-llama/llama-3.3-70b-instruct`, provider order Groq |
-| Maps | Leaflet + CARTO dark tiles; OSRM; optional Google Maps Platform |
+| Frontend | React 19, Vite, TypeScript, React Router, Leaflet, Framer Motion |
+| Backend | Python, FastAPI, Pydantic v2, httpx, SlowAPI |
+| AI | OpenRouter → `meta-llama/llama-3.3-70b-instruct` (provider order Groq) |
+| Maps | Leaflet + CARTO Voyager; OSRM driving times; Nominatim / Overpass; optional Google Maps Platform |
 
-## Google Maps Integration
-
-If `GOOGLE_MAPS_API_KEY` is set, the backend uses Google Geocoding, Places Nearby Search, and Distance Matrix. The key stays on the server.
-
-Without a Google key, the app still plans real trips using Nominatim, Overpass, OSRM, and curated high-quality seeds for destinations such as Islamabad, Abbottabad, Hunza, Murree, and Lahore.
-
-## Project Architecture
-
-```mermaid
-flowchart LR
-  UI[React trip UI] --> API[FastAPI]
-  API --> Intent[AI intent JSON]
-  API --> Places[Places facade]
-  Places --> Google[Google Places]
-  Places --> OSM[Nominatim / Overpass]
-  API --> Score[Recommendation scorer]
-  API --> Route[OSRM / Distance Matrix]
-  Score --> Days[Itinerary engine]
-  Route --> Days
-  Days --> UI
-  Intent --> API
-```
+## Project structure
 
 ```text
 index.html          Vite app entry (repository root)
 src/                React pages and components
-backend/            FastAPI, AI, places, itinerary engine
-.github/workflows   GitHub Pages build
+backend/            FastAPI, AI, places, itinerary, budget
+run.py              API launcher (reads APP_PORT from .env)
+start.bat           Windows helper to start the stack
+.env.example        Environment template (no secrets)
 ```
 
 ## Installation
 
+Requires Python 3.11+ and Node.js 18+.
+
 ```bash
-# from the project root
+git clone https://github.com/hamza2324/ai-travel-guide.git
+cd ai-travel-guide
 python -m venv .venv
-# Windows
+```
+
+Windows:
+
+```bash
 .venv\Scripts\activate
 pip install -r backend/requirements.txt
 npm install
 ```
 
-## Environment Variables
+macOS / Linux:
 
-Copy `.env.example` to `.env` (this repo already expects `.env` at the project root).
+```bash
+source .venv/bin/activate
+pip install -r backend/requirements.txt
+npm install
+```
+
+## Configuration
+
+Copy `.env.example` to `.env` at the **repository root**. Never commit `.env`.
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `OPENROUTER_API_KEY` | Yes | LLM access |
+| `OPENROUTER_API_KEY` | Yes (for live AI) | LLM access |
 | `OPENROUTER_MODEL` | No | Default `meta-llama/llama-3.3-70b-instruct` |
 | `OPENROUTER_PROVIDER` | No | Default `Groq` |
-| `GOOGLE_MAPS_API_KEY` | No | Places / geocode / distance |
+| `APP_PORT` | No | Default `8010` in `.env.example` |
+| `GOOGLE_MAPS_API_KEY` | No | Server-side Places / geocode / distance |
 | `CORS_ORIGINS` | No | Comma-separated browser origins |
 
-Never put AI or unrestricted Google keys in frontend code.
+Without a Google key, planning still uses Nominatim, Overpass, OSRM, and curated place seeds.
 
-## Running Locally
-
-On Windows you can double-click `start.bat`, or use two terminals:
+## Usage
 
 Terminal 1 — API:
 
@@ -155,7 +108,7 @@ Terminal 1 — API:
 python run.py
 ```
 
-API: [http://127.0.0.1:8010](http://127.0.0.1:8010) · health: `/api/health`
+Health check: [http://127.0.0.1:8010/api/health](http://127.0.0.1:8010/api/health)
 
 Terminal 2 — UI:
 
@@ -163,24 +116,39 @@ Terminal 2 — UI:
 npm run dev
 ```
 
-App: [http://localhost:5173](http://localhost:5173)
+App: [http://localhost:5173](http://localhost:5173) (Vite may pick 5174/5175 if 5173 is busy). `/api` is proxied to FastAPI.
 
-Vite proxies `/api` to FastAPI. After `npm run build`, FastAPI also serves the compiled app from `/`.
+After `npm run build`, FastAPI can also serve `dist/` from `/`.
 
-The repository root `index.html` is the app entry. GitHub Pages deploys the production build automatically from `main`. Full AI planning still needs the FastAPI backend running with your `.env` key.
+On Windows, `start.bat` can launch the stack.
 
-## Future Improvements
+## API
 
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/health` | Liveness, AI enabled flag, model/provider |
+| POST | `/api/trips/plan` | Build an itinerary (rate-limited) |
+| POST | `/api/trips/modify` | Apply a structured assistant edit |
+| POST | `/api/ai/analyze-request` | Intent extraction only |
+| GET | `/api/places/search` | Location autocomplete |
+| GET | `/api/places/geocode` | Forward geocode |
+| GET | `/api/places/reverse` | Reverse geocode |
+| POST | `/api/itinerary/generate` | Same planning pipeline as `/api/trips/plan` |
+
+Interactive docs when the API is running: [http://127.0.0.1:8010/docs](http://127.0.0.1:8010/docs)
+
+## Limitations
+
+- Live planning needs `OPENROUTER_API_KEY` and a reachable backend; a static frontend alone cannot call Groq.
+- Place coverage depends on OSM/Overpass (or Google) plus curated seeds — not a complete worldwide catalogue.
+- PKR figures are field-style ranges, not live quotes.
+- Trips are device-local (`localStorage`); there is no account system.
+
+## Future improvements
+
+- Accounts and shared trips
 - Weather-aware day shuffling
-- Collaborative trips and accounts
-- Preference memory across journeys
-- Offline itinerary package
-- Packing assistant
-- Destination safety summaries from official sources
+- PDF / ICS export
 - Deeper restaurant and hotel clustering
-- PDF / shareable link export
-- Calendar export (ICS)
 
-## License
-
-Private portfolio project. Photography via Unsplash. Map data © OpenStreetMap contributors.
+Photography via Unsplash. Hero video via Pexels. Map data © OpenStreetMap contributors. Routing via OSRM.
