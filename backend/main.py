@@ -1,4 +1,5 @@
 from pathlib import Path
+import logging
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,6 +14,7 @@ from .routers import ai, itinerary, locations, trips
 from .utils.errors import AppError
 
 settings = get_settings()
+log = logging.getLogger("ai-travel-guide")
 ROOT_DIR = Path(__file__).resolve().parent.parent
 frontend_dist = ROOT_DIR / "dist"
 
@@ -47,10 +49,11 @@ async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
 async def unhandled_error_handler(_: Request, exc: Exception) -> JSONResponse:
     if isinstance(exc, HTTPException):
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    log.exception("Unhandled planning error")
     return JSONResponse(
         status_code=500,
         content={
-            "detail": "Something went wrong while planning this trip. Please try again.",
+            "detail": "Something went wrong while planning this trip. Please try again in a moment.",
             "code": "internal_error",
         },
     )

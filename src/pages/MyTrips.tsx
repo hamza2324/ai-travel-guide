@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { deleteTrip, loadTrips } from "../storage";
-import { categoryImage } from "../data";
+import { categoryImage, IMAGES } from "../data";
 
 export function MyTrips() {
   const navigate = useNavigate();
@@ -9,9 +9,15 @@ export function MyTrips() {
 
   return (
     <main id="main" className="trips-page">
+      <div className="page-ribbon" aria-hidden>
+        <img src={`${IMAGES.split}&w=1200`} alt="" />
+        <img src={`${IMAGES.hero}&w=800`} alt="" />
+        <img src={`${IMAGES.city}&w=800`} alt="" />
+        <img src={`${IMAGES.lakes}&w=800`} alt="" />
+      </div>
       <div className="eyebrow">Library</div>
       <h1 style={{ fontSize: "3.4rem" }}>My trips</h1>
-      <p className="muted">Saved on this device. Ready later for accounts and cloud sync.</p>
+      <p className="muted">Saved on this device — open one like a travel journal.</p>
       {trips.length === 0 ? (
         <div className="panel empty" style={{ marginTop: 28 }}>
           <p>No saved journeys yet.</p>

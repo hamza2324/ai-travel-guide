@@ -3,6 +3,10 @@ export const IMAGES = {
   heroAlt: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=2400&q=80",
   split: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80",
   journal: "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?auto=format&fit=crop&w=1400&q=80",
+  lakes: "https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=1400&q=80",
+  city: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1400&q=80",
+  table: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1400&q=80",
+  road: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1400&q=80",
   video:
     "https://videos.pexels.com/video-files/3571264/3571264-hd_1920_1080_30fps.mp4",
   moods: {
@@ -30,6 +34,44 @@ export const IMAGES = {
     adventure: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=900&q=80",
   } as Record<string, string>,
 };
+
+export const FILMSTRIP = [
+  IMAGES.hero,
+  IMAGES.heroAlt,
+  IMAGES.split,
+  IMAGES.journal,
+  IMAGES.lakes,
+  IMAGES.city,
+  IMAGES.table,
+  IMAGES.road,
+];
+
+export const DESTINATIONS = [
+  {
+    name: "Hunza",
+    line: "7 days · valleys & passes",
+    query: "Plan a 7-day adventure trip to Hunza for two friends. We love mountains, photography, and food.",
+    image: IMAGES.hero,
+  },
+  {
+    name: "Islamabad",
+    line: "3 days · trails & tables",
+    query: "Plan a 3-day budget-friendly trip to Islamabad for two friends. We love mountains, food, photography, and historical places.",
+    image: IMAGES.road,
+  },
+  {
+    name: "Skardu",
+    line: "5 days · lakes & light",
+    query: "Plan a 5-day photography trip to Skardu with mountains, lakes, and a balanced pace.",
+    image: IMAGES.lakes,
+  },
+  {
+    name: "Lahore",
+    line: "Weekend · food & forts",
+    query: "Plan a 2-day food and history trip to Lahore for friends, moderate budget.",
+    image: IMAGES.city,
+  },
+];
 
 export const MOODS = [
   { id: "adventure", label: "Adventure", interests: ["adventure", "mountains"], style: "fast-paced" as const, image: IMAGES.moods.adventure },

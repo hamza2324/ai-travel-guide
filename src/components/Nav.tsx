@@ -1,8 +1,28 @@
-import { NavLink } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 
 export function Nav() {
+  const { pathname } = useLocation();
+  const landing = pathname === "/";
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    if (!landing) {
+      setScrolled(false);
+      return;
+    }
+    const onScroll = () => setScrolled(window.scrollY > 48);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [landing]);
+
+  const classes = ["nav"];
+  if (landing) classes.push("nav-over-hero");
+  if (landing && scrolled) classes.push("nav-solid");
+
   return (
-    <header className="nav">
+    <header className={classes.join(" ")}>
       <a className="skip-link" href="#main">
         Skip to content
       </a>

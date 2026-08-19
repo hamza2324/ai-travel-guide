@@ -1,8 +1,10 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import { api } from "../api";
 import { LocationSearch } from "../components/LocationSearch";
 import { LoadingJourney } from "../components/LoadingJourney";
+import { IMAGES } from "../data";
 import { INTERESTS, type BudgetTier, type GeoPoint, type TravelStyle, type TravelerType } from "../types";
 import { cacheDraft, saveTrip } from "../storage";
 
@@ -91,7 +93,7 @@ export function Planner() {
         destination: destination.trim() || undefined,
         origin: origin.trim() || undefined,
         origin_coords: originCoords,
-        duration_days: duration,
+        duration_days: mode === "guided" ? duration : undefined,
         budget,
         travel_style: style,
         travelers,
@@ -119,13 +121,24 @@ export function Planner() {
 
   return (
     <main id="main" className="planner-page">
+      <div className="page-ribbon" aria-hidden>
+        <img src={`${IMAGES.hero}&w=1200`} alt="" />
+        <img src={`${IMAGES.lakes}&w=800`} alt="" />
+        <img src={`${IMAGES.table}&w=800`} alt="" />
+        <img src={`${IMAGES.city}&w=800`} alt="" />
+      </div>
       <div className="planner-shell">
-        <form className="panel" onSubmit={onSubmit}>
+        <motion.form
+          className="panel"
+          onSubmit={onSubmit}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45 }}
+        >
           <div className="eyebrow">Trip planner</div>
           <h1 style={{ fontSize: "3.2rem", marginBottom: 8 }}>Describe the journey.</h1>
           <p className="muted">
-            Natural language and guided controls work together. The model structures your request; maps and scoring
-            build the days.
+            Write it the way you’d text a friend. We’ll turn it into days, photos, and a map — then you can swap stops.
           </p>
           <div className="mode-toggle" role="tablist" aria-label="Planning mode">
             <button type="button" className={mode === "natural" ? "active" : ""} onClick={() => setMode("natural")}>
@@ -257,22 +270,37 @@ export function Planner() {
 
           {error && <div className="alert">{error}</div>}
           <button className="btn btn-primary" type="submit" style={{ marginTop: 12, width: "100%" }}>
-            Generate itinerary
+            Build my itinerary
           </button>
-        </form>
-        <aside className="panel">
-          <div className="section-kicker">What you get</div>
-          <h2 style={{ fontSize: "2.4rem" }}>A day-by-day route, not a listicle.</h2>
-          <p className="muted">
-            Each stop includes travel time, visit duration, and a short explanation of why it was chosen. Switch days
-            on the map. Ask the assistant to swap a museum for a viewpoint.
-          </p>
-          <ul className="muted">
-            <li>Intent extraction with validated JSON</li>
-            <li>OpenStreetMap / Google Places discovery</li>
-            <li>Interest, rating, distance, and budget scoring</li>
-            <li>Nearest-neighbor routing with 2-opt cleanup</li>
-          </ul>
+        </motion.form>
+        <aside className="panel planner-aside">
+          <div className="planner-collage" aria-hidden>
+            <img src={`${IMAGES.heroAlt}&w=900`} alt="" />
+            <img src={`${IMAGES.journal}&w=700`} alt="" />
+            <img src={`${IMAGES.table}&w=700`} alt="" />
+          </div>
+          <div className="planner-aside-copy">
+            <div className="section-kicker">What you get</div>
+            <h2 style={{ fontSize: "2.4rem" }}>A day-by-day route, not a listicle.</h2>
+            <p className="muted">
+              Each stop has a photo, visit time, and why it belongs on that day. Switch days on the map. Ask to swap a
+              museum for a viewpoint.
+            </p>
+            <ul className="planner-perks">
+              <li>
+                <b>—</b> Distinct corridors so Hunza doesn’t repeat the same fort all week
+              </li>
+              <li>
+                <b>—</b> Drive time baked into the schedule
+              </li>
+              <li>
+                <b>—</b> Budget quoted in PKR, not a made-up dollar guess
+              </li>
+              <li>
+                <b>—</b> A map you can follow, stop by stop
+              </li>
+            </ul>
+          </div>
         </aside>
       </div>
     </main>

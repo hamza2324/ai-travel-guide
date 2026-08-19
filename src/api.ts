@@ -20,14 +20,29 @@ async function parseError(response: Response): Promise<string> {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, {
-    headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
-    ...init,
-  });
-  if (!response.ok) {
-    throw new Error(await parseError(response));
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), 120000);
+  try {
+    const response = await fetch(path, {
+      headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
+      signal: controller.signal,
+      ...init,
+    });
+    if (!response.ok) {
+      throw new Error(await parseError(response));
+    }
+    return response.json() as Promise<T>;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("Planning is taking longer than expected. Check the API is running, then try again.");
+    }
+    if (error instanceof TypeError) {
+      throw new Error("Can't reach the planner. Start the API with python run.py, then try again.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
   }
-  return response.json() as Promise<T>;
 }
 
 export const api = {

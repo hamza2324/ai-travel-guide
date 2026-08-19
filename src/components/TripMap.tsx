@@ -3,7 +3,7 @@ import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-
 import L from "leaflet";
 import type { DayPlan, GeoPoint, ItineraryStop } from "../types";
 
-const DAY_COLORS = ["#cbb089", "#3e8f7c", "#8fb4d4", "#d4a09a", "#cbb089"];
+const DAY_COLORS = ["#c45c26", "#2f5d50", "#7d9bb0", "#c4a574", "#c45c26"];
 
 function pinIcon(index: number, color: string) {
   return L.divIcon({
@@ -51,12 +51,12 @@ export function TripMap({
       aria-label={`Map of day ${day.day}`}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
       />
       <Fit points={line} />
       {start && (
-        <Marker position={start} icon={pinIcon(0, "#f4efe6")}>
+        <Marker position={start} icon={pinIcon(0, "#2f5d50")}>
           <Popup>Starting point</Popup>
         </Marker>
       )}

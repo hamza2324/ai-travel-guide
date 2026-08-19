@@ -13,7 +13,7 @@ export function PlaceCard({ place }: { place: Place }) {
         />
         <div className="match-badge">
           <strong>{Math.round(place.match_score)}%</strong>
-          <div>AI MATCH</div>
+          <div>GUIDE PICK</div>
         </div>
       </div>
       <div className="place-body">
