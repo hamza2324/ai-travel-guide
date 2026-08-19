@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { ATTRIBUTION, IMAGES, MOODS } from "../data";
+import { ATTRIBUTION, FIELD_NOTES, IMAGES, MOODS } from "../data";
 
 export function Landing() {
   const navigate = useNavigate();
@@ -21,53 +21,71 @@ export function Landing() {
     <main id="main">
       <section className="hero">
         <div className="hero-media" aria-hidden>
-          <img src={IMAGES.hero} alt="" />
+          <video
+            className="hero-video"
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster={IMAGES.hero}
+          >
+            <source src={IMAGES.video} type="video/mp4" />
+          </video>
+          <img className="hero-still" src={IMAGES.hero} alt="" />
         </div>
+        <div className="hero-grain" aria-hidden />
         <div className="hero-overlay" />
         <div className="hero-content">
-          <div className="eyebrow">AI-powered travel companion</div>
+          <div className="eyebrow">Field companion · Karakoram to the cities</div>
           <h1>
-            Plan less.
+            <em>Plan less.</em>
             <br />
-            Experience more.
+            Travel like a guide.
           </h1>
           <p className="lead">
-            Your AI-powered travel companion creates personalized trips based on your interests,
-            budget, location, and time.
+            Hour-by-hour days, distinct valleys, and a rupee budget that matches the road —
+            not a copy-paste list repeated for a week.
           </p>
           <form
             className="hero-search"
             onSubmit={(event) => {
               event.preventDefault();
-              start(prompt || "Plan a 3-day trip with nature, food, and photography.");
+              start(prompt || "Plan a 7-day adventure trip to Hunza with mountains, photography, and food.");
             }}
           >
-            <label className="visually-hidden" htmlFor="hero-q" style={{ position: "absolute", left: -9999 }}>
+            <label htmlFor="hero-q" className="sr-only">
               Where do you want to go?
             </label>
             <input
               id="hero-q"
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
-              placeholder="Where do you want to go?"
+              placeholder="Hunza for 7 days, two friends, mountains and food…"
             />
             <button className="btn btn-primary" type="submit">
-              Start planning
+              Begin the journey
             </button>
           </form>
           <div className="hero-pills">
-            <span>🌍 Personalized</span>
-            <span>🧠 AI powered</span>
-            <span>📍 Location aware</span>
+            <span>Day-by-day corridors</span>
+            <span>PKR field budget</span>
+            <span>Adventure advice</span>
           </div>
         </div>
+        <div className="hero-caption">Northern light · filmed in mountain air</div>
+      </section>
+
+      <section className="section filmstrip" aria-label="Destinations">
+        {[IMAGES.hero, IMAGES.heroAlt, IMAGES.split, IMAGES.journal, IMAGES.moods.adventure, IMAGES.moods.history].map((src) => (
+          <img key={src} src={`${src}&w=700`} alt="" loading="lazy" />
+        ))}
       </section>
 
       <section className="section" id="discover">
         <div className="section-kicker">Explore by mood</div>
-        <h2>Begin with a feeling, not a spreadsheet.</h2>
-        <p className="muted" style={{ maxWidth: 520 }}>
-          Choose a mood and we prefill a planner that still listens to natural language.
+        <h2>Begin with a feeling, then follow a real route.</h2>
+        <p className="muted" style={{ maxWidth: 540 }}>
+          Each mood prefills the planner. The itinerary still changes by valley, hour, and drive time.
         </p>
         <div className="mood-grid">
           {MOODS.map((mood) => (
@@ -79,22 +97,41 @@ export function Landing() {
         </div>
       </section>
 
+      <section className="section advisor-grid">
+        <div>
+          <div className="section-kicker">From the field book</div>
+          <h2>Advice a local guide would actually give.</h2>
+          <div className="advisor-list">
+            {FIELD_NOTES.map((note) => (
+              <article key={note.title} className="advisor-card">
+                <h3>{note.title}</h3>
+                <p className="muted">{note.body}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+        <div className="split-visual">
+          <img src={IMAGES.journal} alt="High mountain road above a river valley" />
+          <div className="split-caption">Keep one corridor per day. That is how the valley is walked.</div>
+        </div>
+      </section>
+
       <section className="section feature-grid">
         <div>
           <div className="section-kicker">How it thinks</div>
-          <h2>Intelligence in the architecture, not just a chat box.</h2>
+          <h2>A classical guide, with a modern engine.</h2>
           <div className="steps">
             <div>
               <div className="step-num">01 — Intent</div>
-              <p className="muted">Llama 3.3 70B extracts destination, duration, budget, and interests into structured data.</p>
+              <p className="muted">The model extracts destination, days, budget, and interests into structured data.</p>
             </div>
             <div>
               <div className="step-num">02 — Place discovery</div>
-              <p className="muted">Live map data finds viewpoints, museums, parks, and restaurants around the destination.</p>
+              <p className="muted">Live maps plus a verified northern-Pakistan field list: forts, lakes, cones, glaciers, passes.</p>
             </div>
             <div>
-              <div className="step-num">03 — Scoring + routes</div>
-              <p className="muted">A deterministic engine ranks matches, groups nearby stops, and builds a realistic day plan.</p>
+              <div className="step-num">03 — Day corridors</div>
+              <p className="muted">Each day is a different geography. Hunza week: Karimabad, Altit, Attabad, Passu, Nagar, Gulmit, Khunjerab.</p>
             </div>
           </div>
         </div>
@@ -104,7 +141,7 @@ export function Landing() {
       </section>
 
       <footer className="footer">
-        <div>AI Travel Guide — a portfolio travel intelligence product.</div>
+        <div>AI Travel Guide — a field companion for serious trips.</div>
         <div>{ATTRIBUTION}</div>
       </footer>
     </main>

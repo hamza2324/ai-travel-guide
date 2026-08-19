@@ -1,6 +1,13 @@
 import type { BudgetEstimate } from "../types";
 
 function money(value: number, currency: string) {
+  if (currency === "PKR") {
+    return new Intl.NumberFormat("en-PK", {
+      style: "currency",
+      currency: "PKR",
+      maximumFractionDigits: 0,
+    }).format(value);
+  }
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
@@ -18,8 +25,9 @@ export function BudgetPanel({ budget }: { budget: BudgetEstimate }) {
   ] as const;
 
   return (
-    <section className="panel" aria-label="Estimated trip budget">
+    <section className="panel" aria-label="Estimated trip budget in Pakistani rupees">
       <h2 style={{ fontSize: "1.8rem" }}>Estimated trip budget</h2>
+      <p className="budget-currency">Pakistani Rupees (PKR)</p>
       <p className="muted">{budget.disclaimer}</p>
       {rows.map(([label, item]) => (
         <div className="budget-row" key={label}>

@@ -15,15 +15,7 @@ from .recommendation_service import (
     duration_for,
 )
 
-DAY_THEMES = [
-    "Discover",
-    "Wander",
-    "Savor",
-    "Elevate",
-    "Unwind",
-    "Explore further",
-    "Return & linger",
-]
+from .fallback_places import DAY_TITLES, BLUEPRINTS, blueprint_key
 
 
 def score_places(
@@ -61,33 +53,86 @@ def _is_attraction(place: Place) -> bool:
     return place.category in ATTRACTION_CATEGORIES or place.category not in MEAL_CATEGORIES | {"hotel"}
 
 
-def cluster_for_days(attractions: list[Place], days: int) -> list[list[Place]]:
-    if not attractions:
-        return [[] for _ in range(days)]
-    remaining = attractions[:]
-    clusters: list[list[Place]] = []
-    for _ in range(days):
-        if not remaining:
-            clusters.append([])
+def _dedupe(places: list[Place]) -> list[Place]:
+    seen: set[str] = set()
+    unique: list[Place] = []
+    for place in places:
+        key = place.name.strip().lower()
+        if key in seen:
             continue
-        seed = remaining.pop(0)
-        group = [seed]
-        nearby: list[tuple[float, Place]] = []
-        for place in remaining:
-            nearby.append((haversine_km(seed.lat, seed.lng, place.lat, place.lng), place))
-        nearby.sort(key=lambda item: item[0])
-        take = max(3, min(8, len(remaining) // max(1, days - len(clusters)) + 2))
-        chosen = [place for dist, place in nearby[:take] if dist < 28]
-        for place in chosen:
-            if place in remaining:
-                remaining.remove(place)
-                group.append(place)
-        clusters.append(group)
-    leftover_index = 0
-    while remaining:
-        clusters[leftover_index % days].append(remaining.pop(0))
-        leftover_index += 1
-    return clusters
+        seen.add(key)
+        unique.append(place)
+    return unique
+
+
+def cluster_for_days(attractions: list[Place], days: int, per_day: int, destination: str = "") -> list[list[Place]]:
+    unique = _dedupe(attractions)
+    if not unique:
+        return [[] for _ in range(days)]
+
+    by_id = {place.id: place for place in unique}
+    key = blueprint_key(destination)
+    if key and key in BLUEPRINTS:
+        clusters: list[list[Place]] = []
+        used: set[str] = set()
+        for corridor in BLUEPRINTS[key][:days]:
+            group = []
+            for pid in corridor:
+                place = by_id.get(pid)
+                if place and place.id not in used:
+                    group.append(place)
+                    used.add(place.id)
+            clusters.append(group)
+        leftovers = [place for place in unique if place.id not in used]
+        while len(clusters) < days:
+            clusters.append([])
+        for place in leftovers:
+            target = min(range(len(clusters)), key=lambda i: (len(clusters[i]), i))
+            if len(clusters[target]) < per_day + 1:
+                clusters[target].append(place)
+        return clusters[:days]
+
+    per_day = max(2, per_day)
+    seeds: list[Place] = []
+    pool = unique[:]
+    seeds.append(pool.pop(0))
+    while pool and len(seeds) < min(days, len(unique)):
+        nxt = max(
+            pool,
+            key=lambda place: min(haversine_km(place.lat, place.lng, seed.lat, seed.lng) for seed in seeds),
+        )
+        seeds.append(nxt)
+        pool.remove(nxt)
+
+    clusters = [[seed] for seed in seeds]
+    while len(clusters) < days:
+        clusters.append([])
+
+    for place in pool:
+        open_days = [i for i, group in enumerate(clusters) if len(group) < per_day]
+        if not open_days:
+            i = min(range(len(clusters)), key=lambda idx: len(clusters[idx]))
+            clusters[i].append(place)
+            continue
+        def score(i: int) -> float:
+            if not clusters[i]:
+                return 0
+            return min(haversine_km(place.lat, place.lng, item.lat, item.lng) for item in clusters[i])
+        best = min(open_days, key=score)
+        clusters[best].append(place)
+
+    richest = max(clusters, key=len)
+    for i, group in enumerate(clusters):
+        if group or len(richest) < 2:
+            continue
+        farthest = max(
+            richest[1:],
+            key=lambda item: haversine_km(richest[0].lat, richest[0].lng, item.lat, item.lng),
+        )
+        richest.remove(farthest)
+        clusters[i] = [farthest]
+        richest = max(clusters, key=len)
+    return clusters[:days]
 
 
 async def order_route(start: tuple[float, float], places: list[Place]) -> list[Place]:
@@ -164,7 +209,8 @@ async def build_day(
     used_ids: set[str],
 ) -> DayPlan:
     start_clock, end_clock, attraction_target = day_window(prefs.travel_style)
-    ordered = await order_route(start, [place for place in attractions if place.id not in used_ids][: attraction_target + 3])
+    day_places = [place for place in attractions if place.id not in used_ids]
+    ordered = await order_route(start, day_places)
     ordered = ordered[:attraction_target]
 
     stops: list[ItineraryStop] = []
@@ -246,13 +292,15 @@ async def build_day(
         )
         await append_stop(meal, "meal")
 
-    theme = DAY_THEMES[(day_index - 1) % len(DAY_THEMES)]
+    theme = _day_title(prefs.destination, day_index, stops)
     attraction_names = [stop.place.name for stop in stops if stop.kind == "attraction"]
-    summary = (
-        f"A {prefs.travel_style} day around {attraction_names[0]}"
-        if attraction_names
-        else f"A slower day to settle into {prefs.destination}"
-    )
+    if attraction_names:
+        summary = (
+            f"A {prefs.travel_style} field day: {', '.join(attraction_names[:3])}. "
+            "Times are a realistic driving-and-walking sequence, not a copy of yesterday."
+        )
+    else:
+        summary = f"A slower recovery day in {prefs.destination} — rest, food, and short walks."
     return DayPlan(
         day=day_index,
         title=theme,
@@ -276,6 +324,18 @@ def _explanation(place: Place, previous: str | None, minutes: int, interests: li
     return f"Recommended because {match}, and it is a strong start to the day."
 
 
+def _day_title(destination: str, day_index: int, stops: list[ItineraryStop]) -> str:
+    key = blueprint_key(destination)
+    titles = DAY_TITLES.get(key or "", [])
+    if day_index - 1 < len(titles):
+        return titles[day_index - 1]
+    areas = [tag for stop in stops for tag in stop.place.tags if stop.kind == "attraction"]
+    if areas:
+        return areas[0].replace("-", " ").title()
+    names = [stop.place.name for stop in stops if stop.kind == "attraction"]
+    return names[0] if names else f"Day {day_index}"
+
+
 async def build_itinerary(
     prefs: TripPreferences,
     places: list[Place],
@@ -286,7 +346,8 @@ async def build_itinerary(
     if not meals:
         meals = [synthetic_meal(f"Local {label}", start[0], start[1], label) for label in ("breakfast cafe", "lunch", "dinner")]
 
-    clusters = cluster_for_days(attractions, prefs.duration_days)
+    _, _, attraction_target = day_window(prefs.travel_style)
+    clusters = cluster_for_days(attractions, prefs.duration_days, attraction_target, prefs.destination)
     used: set[str] = set()
     days: list[DayPlan] = []
     current_start = start

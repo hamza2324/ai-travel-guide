@@ -109,9 +109,11 @@ export function TripDashboard() {
           }}
         />
         <div className="card-grid" style={{ marginTop: 22, gridTemplateColumns: "1fr 1fr" }}>
-          {trip.featured_places.slice(0, 4).map((place) => (
-            <PlaceCard key={place.id} place={place} />
-          ))}
+          {day.stops
+            .filter((stop) => stop.kind === "attraction")
+            .map((stop) => (
+              <PlaceCard key={stop.place.id} place={stop.place} />
+            ))}
         </div>
         <div style={{ height: 16 }} />
         <BudgetPanel budget={trip.budget} />
@@ -125,9 +127,14 @@ export function TripDashboard() {
           }}
         />
         {trip.notes.length > 0 && (
-          <p className="muted" style={{ marginTop: 16 }}>
-            {trip.notes.join(" ")}
-          </p>
+          <section className="panel" style={{ marginTop: 16 }} aria-label="Field notes">
+            <h2 style={{ fontSize: "1.7rem" }}>Field notes</h2>
+            {trip.notes.map((note) => (
+              <p className="muted" key={note}>
+                {note}
+              </p>
+            ))}
+          </section>
         )}
       </div>
       <div className="map-wrap">

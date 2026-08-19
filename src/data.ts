@@ -1,18 +1,22 @@
 export const IMAGES = {
-  hero: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2200&q=80",
+  hero: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2400&q=80",
+  heroAlt: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=2400&q=80",
   split: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80",
+  journal: "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?auto=format&fit=crop&w=1400&q=80",
+  video:
+    "https://videos.pexels.com/video-files/3571264/3571264-hd_1920_1080_30fps.mp4",
   moods: {
-    adventure: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=800&q=80",
-    nature: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80",
-    photography: "https://images.unsplash.com/photo-1491555103944-7c647fd097b8?auto=format&fit=crop&w=800&q=80",
-    food: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
-    history: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=800&q=80",
-    relaxation: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+    adventure: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=900&q=80",
+    nature: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=900&q=80",
+    photography: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80",
+    food: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80",
+    history: "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=900&q=80",
+    relaxation: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80",
   },
   categories: {
     viewpoint: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=900&q=80",
     museum: "https://images.unsplash.com/photo-1572953109213-3be92343fc5c?auto=format&fit=crop&w=900&q=80",
-    historic: "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=900&q=80",
+    historic: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=900&q=80",
     religious: "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=900&q=80",
     park: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=900&q=80",
     nature: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=900&q=80",
@@ -23,6 +27,7 @@ export const IMAGES = {
     hotel: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80",
     beach: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80",
     nightlife: "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&w=900&q=80",
+    adventure: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=900&q=80",
   } as Record<string, string>,
 };
 
@@ -35,10 +40,16 @@ export const MOODS = [
   { id: "relaxation", label: "Relaxation", interests: ["relaxation", "nature"], style: "relaxed" as const, image: IMAGES.moods.relaxation },
 ];
 
+export const FIELD_NOTES = [
+  { title: "Move with the valley", body: "A Hunza week is seven corridors, not one fort seven times. Karimabad, Altit, Attabad, Passu, Nagar, Gulmit, Khunjerab." },
+  { title: "Jeep is the plan", body: "Northern days are timed around 4x4 hours, altitude, and light — not a city walking tour pasted onto mountains." },
+  { title: "Quoted in rupees", body: "Budgets use Pakistani guesthouse, meal, and jeep ranges so the number means something on the ground." },
+];
+
 export function categoryImage(category: string, fallback?: string | null) {
   if (fallback) return fallback;
   return IMAGES.categories[category] || IMAGES.categories.attraction;
 }
 
 export const ATTRIBUTION =
-  "Hero and mood photography via Unsplash. Map data © OpenStreetMap contributors. Routing via OSRM.";
+  "Cinematic stills via Unsplash. Hero motion via Pexels. Map data © OpenStreetMap contributors. Routing via OSRM. PKR ranges are field estimates, not invoices.";

@@ -23,9 +23,9 @@ def estimate_drive_minutes(distance_km: float) -> int:
 
 
 def radius_for_trip(duration_days: int, travel_style: str) -> int:
-    base = 18 + duration_days * 8
+    base = 28 + duration_days * 14
     if travel_style == "relaxed":
-        base = int(base * 0.75)
+        base = int(base * 0.85)
     elif travel_style == "fast-paced":
-        base = int(base * 1.25)
-    return min(90, max(12, base))
+        base = int(base * 1.2)
+    return min(160, max(22, base))

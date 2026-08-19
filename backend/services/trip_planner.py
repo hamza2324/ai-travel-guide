@@ -8,6 +8,7 @@ from ..utils.errors import AppError, PlacesNotFoundError
 from ..utils.geo import radius_for_trip
 from . import ai_service
 from .budget_service import estimate_budget
+from .fallback_places import advisor_notes, blueprint_key
 from .geocoding_service import geocode, reverse_geocode
 from .itinerary_service import apply_less_driving, build_itinerary, featured_from_days, remove_stop, score_places
 from .places_service import discover_places
@@ -77,13 +78,14 @@ async def plan_trip(request: PlanTripRequest) -> PlanTripResponse:
     narrative = await ai_service.generate_trip_narrative(
         prefs, featured, [day.theme for day in days]
     )
+    has_guide_days = blueprint_key(prefs.destination) is not None
     titles = narrative.get("day_titles") or []
     summaries = narrative.get("day_summaries") or []
     for index, day in enumerate(days):
-        if index < len(titles) and titles[index]:
-            day.title = str(titles[index])[:48]
-        if index < len(summaries) and summaries[index]:
-            day.summary = str(summaries[index])[:220]
+        if not has_guide_days and index < len(titles) and titles[index]:
+            day.title = str(titles[index])[:56]
+        if not has_guide_days and index < len(summaries) and summaries[index]:
+            day.summary = str(summaries[index])[:240]
 
     trip = Trip(
         id=str(uuid.uuid4()),
@@ -95,8 +97,9 @@ async def plan_trip(request: PlanTripRequest) -> PlanTripResponse:
         budget=estimate_budget(prefs),
         map_center=GeoPoint(lat=dest_point.lat, lng=dest_point.lng, label=prefs.destination),
         created_at=datetime.now(timezone.utc).isoformat(),
-        notes=list(narrative.get("notes") or [])
-        + [f"Places sourced from {source} and ranked with a deterministic recommendation model."],
+        notes=advisor_notes(prefs.destination)
+        + list(narrative.get("notes") or [])
+        + [f"Places sourced from {source} and sequenced so each day covers a different corridor."],
     )
     pipeline.append("Ready")
     return PlanTripResponse(trip=trip, pipeline=pipeline, warnings=warnings)

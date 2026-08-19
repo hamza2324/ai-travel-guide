@@ -1,3 +1,4 @@
+import { categoryImage } from "../data";
 import type { DayPlan, ItineraryStop } from "../types";
 
 function formatTime(value: string) {
@@ -35,8 +36,17 @@ export function ItineraryTimeline({
               onClick={() => onSelect(stop)}
               style={{ all: "unset", cursor: "pointer", display: "block", width: "100%" }}
             >
-              <div className="stop-time">{formatTime(stop.time)}</div>
-              <h3 style={{ margin: "4px 0 0", fontSize: "1.35rem" }}>{stop.place.name}</h3>
+              <div className="stop-visual">
+                <img
+                  src={categoryImage(stop.place.category, stop.place.photo_url)}
+                  alt=""
+                  loading="lazy"
+                />
+                <div>
+                  <div className="stop-time">{formatTime(stop.time)}</div>
+                  <h3 style={{ margin: "4px 0 0", fontSize: "1.35rem" }}>{stop.place.name}</h3>
+                </div>
+              </div>
               <div className="stop-meta">
                 <span style={{ textTransform: "capitalize" }}>{stop.kind}</span>
                 <span>{stop.duration_minutes} min</span>
@@ -46,7 +56,7 @@ export function ItineraryTimeline({
                   </span>
                 )}
               </div>
-              <p className="reason">{stop.explanation}</p>
+              <p className="reason">{stop.place.description || stop.explanation}</p>
             </button>
             <button className="btn btn-ghost btn-small" type="button" onClick={() => onRemove(stop)}>
               Remove
